@@ -1,0 +1,70 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ColorStage from '../../components/ColorStage';
+import { getPhones } from '../../lib/phones';
+import { formatPrice } from '../../lib/format';
+import type { Phone } from '../../lib/types';
+
+// Genera una página por cada celular: /celulares/galaxy-a56, /celulares/iphone-16, ...
+export async function getStaticPaths() {
+  const phones = await getPhones();
+  return phones.map((phone) => ({ params: { slug: phone.slug }, props: { phone } }));
+}
+
+interface Props {
+  phone: Phone;
+}
+
+const { phone } = Astro.props;
+
+const specs = (
+  [
+    ['Almacenamiento', phone.storageGb ? `${phone.storageGb} GB` : null],
+    ['Memoria RAM', phone.ramGb ? `${phone.ramGb} GB` : null],
+    ['Pantalla', phone.screenInches ? `${phone.screenInches} pulgadas` : null],
+    ['Batería', phone.batteryMah ? `${phone.batteryMah.toLocaleString('es-MX')} mAh` : null],
+    ['Cámara principal', phone.mainCameraMp ? `${phone.mainCameraMp} MP` : null],
+    ['Sistema operativo', phone.os],
+  ] as [string, string | null][]
+).filter((row): row is [string, string] => row[1] !== null);
+
+const description =
+  phone.description ?? `${phone.name} de ${phone.brand.name}: precio, colores y especificaciones.`;
+---
+
+<Layout
+  title={`${phone.name} de ${phone.brand.name} | Catálogo de celulares`}
+  description={description}
+  accent={phone.colors[0]?.hex}
+>
+  <div class="container">
+    <a class="back" href="/">Volver al catálogo</a>
+
+    <article class="detail">
+      <div class="detail__media">
+        <ColorStage client:load phoneName={phone.name} imageUrl={phone.imageUrl} colors={phone.colors} />
+      </div>
+
+      <div class="detail__info">
+        <p class="detail__brand">{phone.brand.name}</p>
+        <h1>{phone.name}</h1>
+        <p class="price">{formatPrice(phone.price, phone.currency)}</p>
+
+        {phone.description && <p class="detail__desc">{phone.description}</p>}
+
+        {
+          specs.length > 0 && (
+            <dl class="specs">
+              {specs.map(([label, value]) => (
+                <>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </>
+              ))}
+            </dl>
+          )
+        }
+      </div>
+    </article>
+  </div>
+</Layout>

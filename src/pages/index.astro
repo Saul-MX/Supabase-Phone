@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Catalogo from '../components/Catalogo';
+import { getPhones } from '../lib/phones';
+
+// Esto corre en el servidor (al construir el sitio): aquí sí podemos leer Supabase.
+const phones = await getPhones();
+---
+
+<Layout title="Catálogo de celulares">
+  <section class="page-head container">
+    <h1>Encuentra tu próximo celular</h1>
+    <p>Filtra por marca y precio, y revisa cada color antes de decidir.</p>
+  </section>
+
+  <div class="container">
+    <!-- client:load = React se activa en el navegador para filtrar sin recargar -->
+    <Catalogo client:load phones={phones} />
+  </div>
+</Layout>
